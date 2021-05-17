@@ -1,28 +1,85 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div>
+    <form @submit.prevent="add">
+      <input type="hidden" v-model="form.id" />
+      <input type="text" v-model="form.title" />
+      <button type="submit" v-show="!updateSubmit">add</button>
+      <button type="button" v-show="updateSubmit" @click="update(form)">
+        Update
+      </button>
+    </form>
+    <ul v-for="content in contents" :key="content.idd">
+      <li>
+        <span>{{ content.title }}</span> &#160;
+        <button @click="edit(content)">Edit</button> ||
+        <button @click="del(content)">Delete</button>
+      </li>
+    </ul>
   </div>
 </template>
-
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
+/* eslint-disable */
+import axios from "axios";
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+  data() {
+    return {
+      form: {
+        id: "",
+        title: "",
+      },
+      contents: "",
+      updateSubmit: false,
+    };
+  },
+  mounted() {
+    this.load();
+  },
+  methods: {
+    load() {
+      axios
+        .get("http://localhost:3000/contents")
+        .then((res) => {
+          this.contents = res.data;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    add() {
+      axios.post("http://localhost:3000/contents/", this.form).then((res) => {
+        this.load();
+        this.form.title = "";
+      });
+    },
+    edit(content) {
+      this.updateSubmit = true;
+      this.form.id = content.id;
+      this.form.title = content.title;
+    },
+    update(form) {
+      return axios
+        .put("http://localhost:3000/contents/" + form.id, {
+          title: this.form.title,
+        })
+        .then((res) => {
+          this.load();
+          this.form.id = "";
+          this.form.title = "";
+          this.updateSubmit = false;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    },
+    del(content) {
+      axios
+        .delete("http://localhost:3000/contents/" + content.id)
+        .then((res) => {
+          this.load();
+          let index = this.contents.indexOf(form.title);
+          this.contents.splice(index, 1);
+        });
+    },
+  },
+};
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
